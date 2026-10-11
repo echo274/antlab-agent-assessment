@@ -1,5 +1,4 @@
-runs/
-config.local.json
+config.local*.json
 .env
 __pycache__/
 *.pyc

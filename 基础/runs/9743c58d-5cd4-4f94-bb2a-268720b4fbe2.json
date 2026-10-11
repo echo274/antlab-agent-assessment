@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "run_id": "9743c58d-5cd4-4f94-bb2a-268720b4fbe2",
+  "utc": "2026-10-11T14:49:04.034107+00:00",
+  "case_id": "D03",
+  "split": "dev",
+  "condition": "E",
+  "variant": "baseline",
+  "mode": "paid",
+  "config": {
+    "provider": "deepseek",
+    "endpoint": "https://api.deepseek.com/v1/chat/completions",
+    "model": "deepseek-chat",
+    "parameters": {
+      "temperature": 0,
+      "max_tokens": 256
+    },
+    "timeout_seconds": 120
+  },
+  "data_sha256": "c37cda40ada89a18630dd7be098672f7e942e6f57e6199fe1aa2d6046e2b4961",
+  "dataset_version": "basic-context-v1.2",
+  "student_sha256": "68325ec0f271cee32987938362fcfabf25265c214dd74716275a00864e6f9958",
+  "original_passage_ids": [
+    "P695887",
+    "P419087"
+  ],
+  "selected_passage_ids": [
+    "P695887",
+    "P419087"
+  ],
+  "messages": [
+    {
+      "role": "system",
+      "content": "你是文档核验助手，只依据下面提供的“段落资料”回答，禁止使用外部知识或记忆。\n段落来自多个项目/版本/批次，其中存在干扰项（项目名、版本、月份、批次或指标口径相近但不同）。必须严格匹配问题中的项目名、版本、月份窗口、批次和指标口径；忽略相近但不同的记录。\n允许跨两段组合计算（如：百分比=分子/分母，差值=两数相减，或按某段的规则筛选另一段的候选）。\n输出规则：\n1. 只输出一个 JSON 对象，不要代码块标记、解释、标点或任何多余文字；\n2. 字段为 \"answer\"（简短答案，只答数值或名称）和 \"citations\"（支撑答案的段落ID数组）；\n3. citations 只能填资料里实际出现的段落 ID；\n4. 资料不足以回答时，answer 填“证据不足”，citations 列出你用来判断“证据不足”所核对的段落 ID；不要把缺失信息编造成事实。\n示例：{\"answer\":\"80%\",\"citations\":[\"P312446\",\"P898100\"]}"
+    },
+    {
+      "role": "user",
+      "content": "问题：白榆项目R5版本在2026-05单并发主测中，方案乙的完整响应耗时中位数比方案甲少多少秒？只输出数值。\n\n段落资料（共 2 段）：\n\n[ID P695887 | 来源 模拟记录/D03/页1]\n白榆项目R5版本在2026-05的记录：单并发主测BY53以同一顺序处理40个问题，基础方案甲的客户端完整响应耗时中位数为7.6秒。 执行环境登记客户端运行时、接口模式与日志保留策略。连续请求按输入顺序保存，每次返回的使用量按服务字段原样写入；缺失字段保持空白。复核记录会链接到当时的输入摘要和结果文件，便于后来核算。 登记系统保存字段定义和计算口径；百分比的分子分母都能追到清单行。数据在导出前经过一次格式检查，但格式检查通过并不意味着引文语义正确。人员复核与机器状态同时留在记录中。 页面记录打开原文的位置、对应的资料快照和检查状态。引用位置存在时仍可能出现内容不支持的回答，所以核对员保存了主张文本和证据原句；这些字段可在审阅报告中逐项追溯。 每周核对本页行号、资料版本与签署记录。\n\n[ID P419087 | 来源 模拟记录/D03/页3]\n批次BY53的复核补页：BY53候选方案乙也处理相同40个问题，中位数为5.8秒；两组模型、输出上限和重试设置相同。 选择表由产品与质量人员共同签署，先检查资格条件，再比较剩余方案。若部分输入在第一次执行时失败，表格仍保留该行。后续的修复记录引用原行号，避免把测试后的改善写回初次结果。 本页还记录版本升级后的回滚入口、会话恢复尝试和文档区域映射状态。摘要用于快速浏览，正式决定仍依据签署规则及原始检查项。只有项目、版本、窗口、批次一致的记录才能放在一次决策中比较。 本组清单由两名核对员独立抽读，意见不一致的项目保留两份初判和仲裁日期。机器生成的建议只在旁列展示，正式签署使用可定位原文、计算口径和原始执行记录。 每周核对本页行号、资料版本与签署记录。"
+    }
+  ],
+  "input_characters": 1239,
+  "status": "ok",
+  "elapsed_seconds": 0.6100761000125203,
+  "response": {
+    "id": "c4613226-e57a-4ffe-aa04-3683749ccb08",
+    "object": "chat.completion",
+    "created": 1791730144,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"answer\":\"1.8\",\"citations\":[\"P695887\",\"P419087\"]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 737,
+      "completion_tokens": 20,
+      "total_tokens": 757,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 737
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+  },
+  "usage": {
+    "prompt_tokens": 737,
+    "completion_tokens": 20,
+    "total_tokens": 757,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 737
+  },
+  "http_status": 200
+}

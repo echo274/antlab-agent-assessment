@@ -1,35 +1,57 @@
-# ANTLab Agent Tasks
+# ANTLab Agent Tasks — 文档阅读与信息核验
 
-文档阅读与信息核验方向 Agent 项目的应用层开发者招募考核：先完成基础题，再从进阶 A/B/C 中选择一套完成。
+应用层开发者招募考核作品。**所选方向：基础（必做）+ 进阶 B（系统失效诊断，暂定）**。
 
-**截止时间：北京时间 2026 年 10 月 16 日 23:59（UTC+8）。**
+- **最终分支**：`main`
+- **最终 commit SHA**：见「最终提交登记」（提交后回填）
+- **真实模型**：DeepSeek（配置 `deepseek-chat`，API 响应字段为 `deepseek-flash`）
 
-## 从哪开始
+## 目录
 
-1. 先读 [开始阅读.md](开始阅读.md)（总体规则、时间、提交方式）。
-2. 基础题（必做）：[基础/README.md](基础/README.md) 与 基础/01_考核题目.md。
-3. 进阶题（三选一）：[进阶/README.md](进阶/README.md)，在 A / B / C 中选一套。
+- `基础/` 基础题：12 题（4 开发 + 8 评测），证据核验方案实现见 `基础/starter/student.py`
+- `results/` 逐例结果与判分（`results/results.csv`、`results/scoring/`、`results/checks/`）
+- `runs/`（见 `基础/runs/`）所有付费/模拟/预览运行原始记录
+- `report.md` / `decisions.md` / `declaration.md` 报告、决定、AI 声明
 
-## 目录结构
+## 启动与运行
 
-```text
-开始阅读.md              入口：总体规则、截止时间、提交方式
-基础/                    基础题：12 题（4 开发题有公开答案 + 8 评测题），
-                         R0/R1/R2/K 四种输入组织条件；模型 API 自费，
-                         主请求量与运行命令见 基础/README.md
-进阶/                    进阶题（A/B/C 三选一）
-├─ 01_A_研究机制迁移.md        A：主张→证据→支持状态机制迁移与对照
-├─ 02_B_系统失效诊断.md        B：源码审查、故障归因与修复
-├─ 03_C_产品假设验证.md        C：围绕自选用户任务的产品假设验证
-├─ materials/                 两份 CC Attribution 公开论文（P1/P2）及抽取数据
-├─ challenge_b/               B 题文档查证样机（30 行 Engine，含预埋故障）
-└─ templates/                 声明与整合报告模板
+```bash
+# 1) 配置（密钥放环境变量，不提交）：复制 config.example.json -> config.local.json，填入 endpoint/model
+export ASSESSMENT_API_KEY='你的key'   # 或设为 Windows 用户环境变量
+
+# 2) 预览输入（不调用模型，不花钱）
+python 基础/starter/runner.py --case D01 --condition E --dry-run --config 基础/config.local.json
+
+# 3) 真实调用（付费，会扣模型额度）
+python 基础/starter/runner.py --split evaluation --condition all --limit 32 --paid --config 基础/config.local.json
+python 基础/starter/runner.py --split evaluation --condition R0 --variant improved --limit 8 --paid --config 基础/config.local.json
+
+# 4) 前端预览（可选）
+python 基础/starter/server.py --config 基础/config.local.json
 ```
 
-## 规则要点
+## 判分与复算（不消费 API 额度）
 
-- 准备时间为一周（包含基础题和进阶题）；模型调用使用自己的 API，费用自理；实验输入、原始响应、失败和前后对照须保留在仓库中。
-- AI 可辅助阅读、实现和排错；需记录它对关键决定的影响、本人如何核验，以及实际完成和未完成的内容。
-- 提交：把作品推送到自己的 GitHub 仓库，并在收集表登记仓库链接与最终 commit SHA；收集表地址与仓库评审账号见 Q 群公布（详见 进阶/05_提交与报告格式.md 与 进阶/06_收集表填写说明.md）。
-- 本包不含评委参考答案、评测标签、内部开发教程或商业书籍全文。
-- 文件完整性：`基础/文件校验.json` 与 `进阶/文件校验.json` 提供逐文件 SHA256，可自行校验。
+```bash
+python results/scoring/score.py          # 由 runs/ 离线复算，生成 results/results.csv
+python results/checks/checks.py          # 诊断 + 变体检查（不调模型）
+```
+
+判分口径与人工 ground truth 见 `results/scoring/ground_truth.md`；评测题无公开答案，答案由本人读原文确定。
+
+## 完成 / 未完成
+
+| 要求 | 状态 | 说明 |
+|---|---|---|
+| 基础题实现 `student.py` | ✅ | `prepare_messages` + `improve`（内容相关性重排） |
+| 40 次主实验（32 基线 + 8 改进） | ✅ | 全部 `ok`，无技术失败/格式错误/引用越界 |
+| 逐题判分 + results.csv | ✅ | 基线 23/32，改进 4/8（见报告） |
+| 一次诊断 | ✅ | T01/T08 答「证据不足」归因为「未套用规则」推理失败 |
+| 一次变体（ID 重映射） | ✅ | improve 只依赖内容、不依赖 ID |
+| 三项决定 | ✅ | 见 decisions.md |
+| 进阶 B | ⏳ 未开始 | 本次按要求先完成基础题，B 后续再做 |
+
+## 来源与声明
+
+- 题包骨架复用 ANTLab Agent Tasks 基础题 starter（`基础/starter/`），`student.py` 为本人实现。
+- AI 使用声明见 `declaration.md`；密钥、Endpoint 未提交。

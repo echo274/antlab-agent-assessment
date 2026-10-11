@@ -1,6 +1,5 @@
 __pycache__/
 *.pyc
-runs/
-config.local.json
+config.local*.json
 .env
 .claude/
