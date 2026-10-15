@@ -3,7 +3,7 @@
 应用层开发者招募考核作品。**所选方向：基础（必做）+ 进阶 B（系统失效诊断）**。
 
 - **最终分支**：`main`
-- **最终 commit SHA**：收尾提交后更新（当前最新 `git log -1 --format=%H`）
+- **最终 commit SHA**：`aa8940206991b8957df97b52896f9cf96abc2efa`（代码与报告内容定稿；本行标注为最后一次 commit）
 - **真实模型**：DeepSeek（配置 `deepseek-chat`，API 响应字段为 `deepseek-flash`）
 
 ## 目录
