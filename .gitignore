@@ -3,3 +3,5 @@ __pycache__/
 config.local*.json
 .env
 .claude/
+.idea/
+学习笔记.md

@@ -1,0 +1,383 @@
+[
+  {
+    "case_id": "R01",
+    "input": {
+      "id": "R01",
+      "reset_before": true,
+      "request": {
+        "query": "timeout request threshold",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v1",
+        "k": 2
+      },
+      "draft": {
+        "answer": "请求超时阈值为30秒。",
+        "citations": [
+          "b01"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "请求超时阈值为30秒。",
+      "citations": [
+        "b01"
+      ],
+      "evidence": [
+        {
+          "id": "b01",
+          "doc_id": "alpha",
+          "snapshot": "v1",
+          "page": 1,
+          "text": "实验A timeout request threshold 为30秒。此值仅适用于第一版请求客户端。",
+          "tags": [
+            "timeout",
+            "request",
+            "threshold",
+            "30"
+          ]
+        }
+      ],
+      "locator_status": "valid",
+      "support_status": "supported",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "803aa78e-262a-4554-ad83-055aa4827002",
+      "request": {
+        "query": "timeout request threshold",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v1",
+        "k": 2
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.04730001091957092,
+      "run_kind": "offline_replay"
+    }
+  },
+  {
+    "case_id": "R02",
+    "input": {
+      "id": "R02",
+      "reset_before": false,
+      "request": {
+        "query": "timeout request threshold",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v2",
+        "k": 2
+      },
+      "draft": {
+        "answer": "请求超时阈值为12秒。",
+        "citations": [
+          "b02"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "请求超时阈值为12秒。",
+      "citations": [
+        "b02"
+      ],
+      "evidence": [
+        {
+          "id": "b02",
+          "doc_id": "alpha",
+          "snapshot": "v2",
+          "page": 1,
+          "text": "实验A timeout request threshold 改为12秒；此版本未测量GPU执行取消。",
+          "tags": [
+            "timeout",
+            "request",
+            "threshold",
+            "12"
+          ]
+        }
+      ],
+      "locator_status": "valid",
+      "support_status": "supported",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "263a8181-8fe7-4d95-bb71-1b2d6698b255",
+      "request": {
+        "query": "timeout request threshold",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v2",
+        "k": 2
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.022400054149329662,
+      "run_kind": "offline_replay"
+    }
+  },
+  {
+    "case_id": "R03",
+    "input": {
+      "id": "R03",
+      "reset_before": true,
+      "request": {
+        "query": "timeout request threshold",
+        "doc_ids": [
+          "beta"
+        ],
+        "snapshot": "v1",
+        "k": 1
+      },
+      "draft": {
+        "answer": "实验B超时为5秒。",
+        "citations": [
+          "b03"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "实验B超时为5秒。",
+      "citations": [
+        "b03"
+      ],
+      "evidence": [],
+      "locator_status": "invalid",
+      "support_status": "not_checked",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "526a3e9d-208a-4e93-85af-4335a4892cea",
+      "request": {
+        "query": "timeout request threshold",
+        "doc_ids": [
+          "beta"
+        ],
+        "snapshot": "v1",
+        "k": 1
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.0127000967040658,
+      "run_kind": "offline_replay"
+    }
+  },
+  {
+    "case_id": "R04",
+    "input": {
+      "id": "R04",
+      "reset_before": true,
+      "request": {
+        "query": "cancel gpu resource",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v2",
+        "k": 2
+      },
+      "draft": {
+        "answer": "点击取消就保证GPU立即停止计算并释放资源。",
+        "citations": [
+          "b04"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "点击取消就保证GPU立即停止计算并释放资源。",
+      "citations": [
+        "b04"
+      ],
+      "evidence": [
+        {
+          "id": "b04",
+          "doc_id": "alpha",
+          "snapshot": "v2",
+          "page": 2,
+          "text": "客户端取消仅停止本地结果展示；本文没有测量服务端是否释放GPU计算资源。",
+          "tags": [
+            "cancel",
+            "gpu",
+            "resource"
+          ]
+        }
+      ],
+      "locator_status": "valid",
+      "support_status": "supported",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "b6263b02-1c0c-4a34-8186-74fb80414e0b",
+      "request": {
+        "query": "cancel gpu resource",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v2",
+        "k": 2
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.013300101272761822,
+      "run_kind": "offline_replay"
+    }
+  },
+  {
+    "case_id": "R05",
+    "input": {
+      "id": "R05",
+      "reset_before": true,
+      "request": {
+        "query": "metadata beta",
+        "doc_ids": [
+          "beta"
+        ],
+        "snapshot": "v1",
+        "k": 2
+      },
+      "draft": {
+        "answer": "文档编号为beta。",
+        "citations": [
+          "b05"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "文档编号为beta。",
+      "citations": [
+        "b05"
+      ],
+      "evidence": [
+        {
+          "id": "b05",
+          "doc_id": "beta",
+          "snapshot": "v1",
+          "page": 3,
+          "text": "本页说明数据文档编号为beta，可使用本页定位元数据。",
+          "tags": [
+            "metadata",
+            "beta"
+          ]
+        }
+      ],
+      "locator_status": "valid",
+      "support_status": "supported",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "ea34e18c-8153-4ee0-8e5a-aaeb45e4f4b6",
+      "request": {
+        "query": "metadata beta",
+        "doc_ids": [
+          "beta"
+        ],
+        "snapshot": "v1",
+        "k": 2
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.012900098226964474,
+      "run_kind": "offline_replay"
+    }
+  },
+  {
+    "case_id": "R06",
+    "input": {
+      "id": "R06",
+      "reset_before": true,
+      "request": {
+        "query": "worker single process",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v2",
+        "k": 2
+      },
+      "draft": {
+        "answer": "此材料未测试多worker性能。",
+        "citations": [
+          "b06"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "此材料未测试多worker性能。",
+      "citations": [
+        "b06"
+      ],
+      "evidence": [
+        {
+          "id": "b06",
+          "doc_id": "alpha",
+          "snapshot": "v2",
+          "page": 3,
+          "text": "本文仅讨论单进程演示，没有对多worker环境做性能测试。",
+          "tags": [
+            "worker",
+            "single",
+            "process"
+          ]
+        }
+      ],
+      "locator_status": "valid",
+      "support_status": "supported",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "abb64f0b-8ed8-473e-b2ed-5e97ed28c0b7",
+      "request": {
+        "query": "worker single process",
+        "doc_ids": [
+          "alpha"
+        ],
+        "snapshot": "v2",
+        "k": 2
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.012199976481497288,
+      "run_kind": "offline_replay"
+    }
+  },
+  {
+    "case_id": "R07",
+    "input": {
+      "id": "R07",
+      "reset_before": true,
+      "request": {
+        "query": "metadata",
+        "doc_ids": [
+          "missing"
+        ],
+        "snapshot": "v1",
+        "k": 2
+      },
+      "draft": {
+        "answer": "这个文档存在。",
+        "citations": [
+          "b05"
+        ],
+        "origin": "synthetic_fixture"
+      }
+    },
+    "output": {
+      "answer": "这个文档存在。",
+      "citations": [
+        "b05"
+      ],
+      "evidence": [],
+      "locator_status": "invalid",
+      "support_status": "not_checked",
+      "judgment_source": "rule",
+      "status": "ok",
+      "request_id": "356701d4-037a-4929-90a0-edc31d49c82e",
+      "request": {
+        "query": "metadata",
+        "doc_ids": [
+          "missing"
+        ],
+        "snapshot": "v1",
+        "k": 2
+      },
+      "cache_hit": false,
+      "elapsed_ms": 0.009599956683814526,
+      "run_kind": "offline_replay"
+    }
+  }
+]

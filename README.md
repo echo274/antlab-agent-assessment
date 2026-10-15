@@ -1,17 +1,18 @@
 # ANTLab Agent Tasks — 文档阅读与信息核验
 
-应用层开发者招募考核作品。**所选方向：基础（必做）+ 进阶 B（系统失效诊断，暂定）**。
+应用层开发者招募考核作品。**所选方向：基础（必做）+ 进阶 B（系统失效诊断）**。
 
 - **最终分支**：`main`
-- **最终 commit SHA**：`a24d873`（`a24d8735179b2f01f11f48e56dc48d86bc2f7f57`）
+- **最终 commit SHA**：收尾提交后更新（当前最新 `git log -1 --format=%H`）
 - **真实模型**：DeepSeek（配置 `deepseek-chat`，API 响应字段为 `deepseek-flash`）
 
 ## 目录
 
 - `基础/` 基础题：12 题（4 开发 + 8 评测），证据核验方案实现见 `基础/starter/student.py`
+- `进阶/challenge_b/` 进阶 B：样机排障（`challenge.py` 基线、`fixed.py` 修复、`diagnose.py` 区分干预、`verify_fixed.py` 回归+变体、`README.md` 排障记录）
 - `results/` 逐例结果与判分（`results/results.csv`、`results/scoring/`、`results/checks/`）
-- `runs/`（见 `基础/runs/`）所有付费/模拟/预览运行原始记录
-- `report.md` / `decisions.md` / `declaration.md` 报告、决定、AI 声明
+- `runs/`（见 `基础/runs/`、`进阶/challenge_b/runs/`）原始运行记录
+- `report.md` / `decisions.md` / `declaration.md` 整合报告、决定、AI 声明
 
 ## 启动与运行
 
@@ -39,6 +40,16 @@ python results/checks/checks.py          # 诊断 + 变体检查（不调模型�
 
 判分口径与人工 ground truth 见 `results/scoring/ground_truth.md`；评测题无公开答案，答案由本人读原文确定。
 
+进阶 B（离线，不花 API）：
+
+```bash
+cd 进阶/challenge_b
+python run_cases.py --output runs/baseline.json   # 原样机基线（复现故障）
+python diagnose.py                                # 区分性干预：证明缓存键根因
+python verify_fixed.py                            # 修复 + 回归 + 变体 + 边界（6/6）
+python server.py --port 8766                      # 页面（baseline + fixed 双引擎对比）
+```
+
 ## 完成 / 未完成
 
 | 要求 | 状态 | 说明 |
@@ -49,7 +60,8 @@ python results/checks/checks.py          # 诊断 + 变体检查（不调模型�
 | 一次诊断 | ✅ | T01/T08 答「证据不足」归因为「未套用规则」推理失败 |
 | 一次变体（ID 重映射） | ✅ | improve 只依赖内容、不依赖 ID |
 | 三项决定 | ✅ | 见 decisions.md |
-| 进阶 B | ⏳ 未开始 | 本次按要求先完成基础题，B 后续再做 |
+| 引用语义支撑（cite_support） | ✅ | 逐条读原文核验：supported 26 / contradicted 13 / insufficient 1 |
+| 进阶 B：主故障修复 | ✅ | 缓存键粒度修复 + 回归/变体/边界；另两个症状(R03/R04)登记未修 |
 
 ## 来源与声明
 

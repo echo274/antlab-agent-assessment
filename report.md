@@ -1,8 +1,9 @@
-# 基础题整合报告：怎样核对相近的文档记录
+# 基础与进阶整合报告：文档查证的证据组织与系统失效诊断
 
-报名编号：____　进阶选择：B（系统失效诊断，暂定）　模型：DeepSeek（配置 `deepseek-chat`，API 返回 `deepseek-flash`）
+报名编号：____　进阶选择：B（系统失效诊断）　模型：DeepSeek（配置 `deepseek-chat`，API 返回 `deepseek-flash`）
 
-> 复算入口：`python results/scoring/score.py`（判分）、`python results/checks/checks.py`（诊断+变体）。逐题结果见 `results/results.csv`，原始记录见 `基础/runs/`。
+> 基础复算：`python results/scoring/score.py`（判分）、`python results/checks/checks.py`（诊断+变体），逐题见 `results/results.csv`，原始记录见 `基础/runs/`。
+> 进阶 B 复算（离线，不花 API）：`进阶/challenge_b/` 下 `diagnose.py`（区分干预）、`verify_fixed.py`（修复+回归+变体）、`run_cases.py --engine fixed:Engine`。详细排障记录见 `进阶/challenge_b/README.md`。
 
 ## 1 完成概览
 
@@ -10,12 +11,16 @@
 |---|---|---|---|---|
 | 实现 `student.py`（prepare_messages + improve） | ✅ | ✅ | — | `基础/starter/student.py` |
 | 40 次主实验（32 基线 + 8 改进） | ✅ | ✅ | 无技术失败/格式错误/引用越界 | `基础/runs/` + `results/results.csv` |
-| 逐题判分 | ✅ | ✅ | cite_support 尚未逐条人工核验 | `results/scoring/score.py`、`ground_truth.md` |
+| 逐题判分 | ✅ | ✅ | — | `results/scoring/score.py`、`ground_truth.md` |
+| 引用语义支撑（cite_support） | ✅ | ✅ | — | 同上，结论见下 |
 | 一次诊断 | ✅ | ✅ | — | `results/checks/checks.py` |
 | 一次变体（ID 重映射） | ✅ | ✅ | — | 同上 |
 | 三项决定 | ✅ | — | — | `decisions.md` |
+| 进阶 B：主故障修复（缓存键粒度） | ✅ | ✅ | 另两个症状(R03/R04)登记未修 | `进阶/challenge_b/`（fixed.py、diagnose.py、verify_fixed.py、README.md） |
 
 **最重要的结论（限定适用范围）**：在「7 段模拟记录、短上下文」这个任务里，我的证据组织方法（提示词 + 内容相关性重排）对**算术题**（76%、2.6、25%）和**真·证据不足题**（焦耳未采集）全部正确；但**跨段「套规则」题**（T01/T04/T07/T08）在 `deepseek-chat` 快档模型上失败。我用 `deepseek-reasoner` 重跑这 4 题**全部答对**，证明失败来自**模型推理强度**，而非证据组织方法。重排（improve）未带来提升（4/8），如实报告。
+
+**进阶 B 最重要的结论**：样机「换版本显示旧结论」的根因是 `challenge.py:12` 缓存键只由 `query` 决定（不含 doc_ids/snapshot/k），R01(v1) 的缓存污染了 R02(v2)。用区分性干预（单独 fresh 跑 R02 正确返回 12秒/b02）排除了「检索/过滤另有 bug」的竞争解释；最小修复只改缓存键，回归 2/2、变体 2/2、边界 1 项复现未解决。
 
 ## 2 阅读到命题
 
@@ -29,6 +34,8 @@
 1. 《Lost in the Middle》让我把「段落顺序」当作自变量——于是 improve 设计为「按相关性把关键段落前置」，并把「同题不同顺序答案变化」当作要观察的现象（最终在 T04/T07 上真的观察到了）。
 2. ALCE（Gao 等）区分「答案正确」与「引文支持」两个指标——所以判分时我把「答案对错」与「引用是否越界/是否支撑」分开记录，而不是只看答案。
 
+**进阶 B 命题**：文档查证样机 `challenge.py` 应满足 `spec.md` 的行为契约（查询范围由 doc_ids+snapshot 确定、缓存不污染改变请求后的结果、引用可定位≠语义支持）。我读源码定位到三类「正确」被混淆——引用可定位 vs 语义支撑、缓存命中 vs 缓存不污染、请求字段一致 vs 数据一致——它们直接导致「换版本显示旧结论」「已验证不可信」伤害用户决策。ALCE 的「正确性/引文支持分离」和 P1 规则（可复现研究）分别指导我把故障归因到「缓存键」和「support_status 把 ID 有效当语义支持」。
+
 ## 3 预期与实验
 
 | 假设 | 竞争解释 | 自变量 | 因变量/分母 | 控制/基线 | 区分观察 | 否定条件 |
@@ -40,6 +47,8 @@
 
 **冻结与接触说明**：评测集 T01–T08 输入公开，我在跑完 40 次前未接触任何标签（无公开标签）。代码/配置在 commit `9fe56e6` 冻结；数据 hash 见每个 run 记录的 `data_sha256`。
 
+**进阶 B 假设与竞争解释**：症状 = R02 请求 v2 却返回 30秒/b01。假设①（缓存复用错误）：缓存键只用 query，跨版本命中旧缓存 → 预测 R02 `cache_hit=True` 且单独 fresh 跑返回 12秒/b02；竞争解释②（检索/过滤错误）：snapshot 过滤失效 → 预测单独 fresh 跑仍返回 30秒。区分干预（`diagnose.py`）支持①、排除②。反向因果检查：R02 更低耗时来自命中旧缓存，非真实加速。
+
 ## 4 实现
 
 **请求链**：前端 `index.html` → `server.py /api/run` → `runner.execute` → `student.prepare_messages`（拼 system+user）→ `provider.call_model`（HTTPS + Bearer 调 DeepSeek）→ 原始响应与 usage 落盘 `runs/<run_id>.json`。
@@ -47,6 +56,8 @@
 **关键设计**：`prepare_messages` 用中文 system 提示词强制：只依据给定段落、严格匹配项目/版本/月份/批次、允许跨段计算、只输出 `{"answer","citations"}`、证据不足时答「证据不足」并列出核对的段落 ID。`improve` 按「项目名/版本/月份」的相关性重排（只重排不丢弃，不读答案/ID）。
 
 **真实模型与配置**：配置 `deepseek-chat`（API 响应 `model` 字段为 `deepseek-flash`），`temperature=0`、`max_tokens=256`。密钥仅存于本机环境变量 `ASSESSMENT_API_KEY`，未提交。
+
+**进阶 B 实现**：最小修复在 `进阶/challenge_b/fixed.py`，把缓存键改为 `(query, tuple(sorted(doc_ids)), snapshot, k)`（doc_ids 排序归一，保证「同组文档不同顺序」仍复用缓存），其余逻辑不动。原样机 `challenge.py` 保留为基线，`server.py` 双引擎（baseline+fixed）供页面对比，`index.html` 用 `textContent` 展示当前请求、来源快照、实际证据、验证来源与 cache_hit。
 
 ## 5 结果
 
@@ -63,11 +74,17 @@
 
 汇总：**基线 23/32（71.9%），改进 4/8**。引用越界 = 0（`cite_valid` 全 valid/empty）。
 
+**客户端完整耗时**（40 次主实验，`elapsed_seconds` 已落盘 `results/results.csv`）：均值 0.68s（0.38–1.29s）；K 条件 0.60s 最低（只发 2 段、prompt 短），R1 0.77s 最高，improved 0.78s、baseline 0.66s，均属真实 API 网络波动范围。本骨架仅测非流式完整耗时（发出请求到读完响应），无法拆分网络/排队/服务端阶段。
+
+**引用语义支撑（cite_support，本人逐条读原文核验）**：40 次中 `supported` 26、`contradicted` 13、`insufficient` 1。关键发现：引用越界虽为 0，但「引用可定位」≠「引用支撑结论」——13 次 `contradicted` 都是模型引到了规则段+候选段却给出相反答案（套规则失败）；唯一 1 次 `insufficient`（T04 R2）是答案碰巧正确但只引了候选段、漏引规则段，说明该题答对带偶然性。逐题依据见 `results/scoring/ground_truth.md`。
+
 **诊断（区分两种解释）**：T01/T08 在 7 段完整输入下仍答「证据不足」。两种解释：① 检索失败（没找到规则段）；② 套用失败（找到规则但没套）。检查：模型引用里**同时含规则段与候选段**（T01 引了 P761989+P555495，T08 引了 P223300+P183430），故为**②套用失败**。进一步用 `deepseek-reasoner` 重跑这 4 题**全对**，证明是模型推理强度问题，非方法问题。
 
 **反例/变体/回归**：ID 重映射后 `improve` 排序不变（PASS，只依赖内容）；`deepseek-chat` 无论 256/1024 tokens、有无 temperature 都答「证据不足」，排除参数影响。
 
 **尚不能排除的解释**：改进（重排）无收益，可能因为 7 段短上下文尚未触发明显的位置效应；更大上下文下是否有效未验证。
+
+**进阶 B 结果**（`verify_fixed.py` 6/6 通过）：修复后 R02 正确返回 12秒/b02；回归 R05/R06 正常；变体 1（标识重映射）R01=30秒/Xb01、R02=12秒/Xb02，变体 2（corpus 逆序）结果不变；自构边界「资料更新后同请求仍命中旧缓存」复现、未解决。另两个症状登记：R03「先截断后过滤」漏证据、R04「support_status 把 ID 有效当语义支持」造假，本次未修。
 
 ## 6 决定与后续
 
@@ -76,7 +93,9 @@
 - **应用端可见/服务端未知**：本骨架只测客户端完整耗时（非流式），无法拆分排队/服务端阶段；下一步最值得验证的是「更大上下文/更多段落时，重排与推理模型是否拉开差距」。
 - **持续维护约束**：判分 ground truth 依赖人工读原文，评测集变更后需重读；密钥与 Endpoint 不进仓库。
 
-**E1–E7 索引**：E1 `基础/starter/server.py`+`runner.py`；E2 本报告第 2 节；E3 `results/results.csv`；E4 `results/checks/checks.py`；E5 ID 重映射变体；E6 `decisions.md`；E7 `declaration.md`。
+**进阶 B 决定**：保留缓存能力（spec 允许），只把缓存键粒度扩大到「请求语义」；舍弃「按时间戳判过期」和「直接关闭缓存」两个替代（见 `进阶/challenge_b/README.md` 第 5 节）。下一项联合实验：给缓存键加入资料版本 hash，验证「资料更新后不命中旧缓存」，并观察多用户/多worker下进程内缓存的失效假设。
+
+**E1–E7 索引**：E1 `基础/starter/server.py`+`runner.py`（基础）与 `进阶/challenge_b/server.py`（进阶 B）；E2 本报告第 2 节；E3 `results/results.csv`（基础）与 `进阶/challenge_b/runs/`（进阶 B 基线/修复）；E4 `results/checks/checks.py`（基础诊断）与 `进阶/challenge_b/diagnose.py`（进阶 B 区分干预）；E5 ID 重映射变体（基础）与 `verify_fixed.py` 标识/顺序变体（进阶 B）；E6 `decisions.md`；E7 `declaration.md`。
 
 ## 开发题（D01–D04）调试记录
 

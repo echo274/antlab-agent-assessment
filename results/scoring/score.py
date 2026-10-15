@@ -12,7 +12,8 @@
 - K 条件只给 2 段，当「规则」或「互补证据」被词法检索漏掉时，正确行为是答“证据不足”，
   故 GT 按条件区分 full（7 段）与 K（2 段）。
 - 技术失败(status≠ok)、格式错误(answer 无法解析) 保留在分母，不剔除。
-- 引用语义支撑(cite_support) 需人工核验，脚本先标 not_checked，人工结论见 ground_truth.md。
+- 引用语义支撑(cite_support) 由本人逐条读原文核验，规则与依据见同目录 ground_truth.md
+  「引用支撑核验」一节；脚本按该规则离线复算，不另调模型。
 """
 import json, csv
 from collections import Counter
@@ -48,6 +49,39 @@ def answer_verdict(answer, gt):
     if gt in ALIASES and answer in ALIASES[gt]:
         return 'correct_alias'
     return 'wrong'
+
+
+# 每题的「关键段落」= 足以推导出正确答案的最少段落集合（依据见 ground_truth.md）。
+# 用于判断：模型引用的段落是否在语义上支撑它给出的答案（引用有效 ≠ 语义支撑）。
+REQUIRED_EVIDENCE = {
+    'T01': {'P761989', 'P555495'},   # 规则 + 候选快照状态
+    'T02': {'P552476', 'P169676'},   # 分母 100 + 分子 76
+    'T03': {'P385105', 'P362285'},   # 基础 9.4 + 候选 6.8
+    'T04': {'P660995', 'P758661'},   # 规则(错误≤3) + 候选召回/错误数
+    'T05': set(),                     # 真·证据不足：资料本身无能耗数据（特殊处理）
+    'T06': {'P873502'},              # 60/8/7 即可推导 25%
+    'T07': {'P850395', 'P313278'},   # 规则(≥85%且P50≤7) + 候选指标
+    'T08': {'P223300', 'P183430'},   # 规则(三项全过) + 候选状态
+}
+
+
+def cite_support(case_id, answer, cites, verdict):
+    """引用语义支撑的人工核验规则（离线复算，依据见 ground_truth.md「引用支撑核验」）。
+
+    - supported   : 引用足以支撑答案（含正确拒答“证据不足”）。
+    - contradicted: 引用本身与答案矛盾——引了规则+候选却答错/答“证据不足”。
+    - insufficient: 引用相关但缺关键段（答对却只引候选、漏引规则段，如 T04 R2）。
+    """
+    # 真·证据不足（T05 焦耳未采集）：资料无任何能耗数据，任何引用都支撑“证据不足”。
+    if case_id == 'T05':
+        return 'supported'
+    covered = REQUIRED_EVIDENCE[case_id].issubset(set(cites))
+    if (answer or '').strip() in ('证据不足', ''):
+        # 拒答：关键段不齐(如 K 条件漏规则) → 拒答有据；关键段齐备却仍拒答 → 与证据矛盾
+        return 'supported' if not covered else 'contradicted'
+    if verdict in ('correct', 'correct_alias'):
+        return 'supported' if covered else 'insufficient'
+    return 'contradicted' if covered else 'insufficient'
 
 
 def load_runs():
@@ -121,7 +155,8 @@ def main():
 
     for r in rows:
         r['verdict'] = score_row(r)
-        r['cite_support'] = 'not_checked'
+        cites = [c for c in r['citations'].split(';') if c]
+        r['cite_support'] = cite_support(r['case_id'], r['answer'], cites, r['verdict'])
 
     OUT.mkdir(parents=True, exist_ok=True)
     fields = ['run_id', 'case_id', 'condition', 'variant', 'status', 'answer', 'citations',
@@ -139,6 +174,7 @@ def main():
     print('   correct =', sum(ok(r['verdict']) for r in rows if r['variant'] == 'baseline'))
     print('== 主实验 improved (8) ==', dict(Counter(r['verdict'] for r in rows if r['variant'] == 'improved')))
     print('   correct =', sum(ok(r['verdict']) for r in rows if r['variant'] == 'improved'))
+    print('== 引用语义支撑(cite_support) ==', dict(Counter(r['cite_support'] for r in rows)))
     print('== 主实验 per-case (baseline R0/R1/R2/K) ==')
     for c in sorted(GT):
         sub = {r['condition']: r['verdict'] for r in rows if r['case_id'] == c and r['variant'] == 'baseline'}

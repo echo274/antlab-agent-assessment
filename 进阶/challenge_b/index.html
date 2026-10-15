@@ -1,11 +1,161 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>系统失效诊断 · 离线样机</title>
-<style>body{max-width:960px;margin:32px auto;font:16px system-ui;padding:0 16px}button,select{padding:8px;margin:6px}pre{white-space:pre-wrap;background:#f2f5f8;padding:18px}small{color:#555}</style>
-<h1>系统失效诊断</h1><p>合成材料与固定响应离线重放；没有模型API调用。</p>
-<select id="cases"></select><label><input type="checkbox" id="reset">运行前清空状态</label><button id="run">运行所选案例</button>
-<p><small>观察请求顺序如何影响输出。R01→R02请保持状态；其他独立案例可勾选清空。候选人需完善差异、来源与验证状态展示。</small></p>
-<pre id="out">等待执行</pre>
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>系统失效诊断 · 离线样机</title>
+<style>
+  body{max-width:1080px;margin:32px auto;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px;color:#1a1a1a}
+  h1{font-size:22px} h2{font-size:17px;margin:24px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+  button,select{padding:8px 12px;font-size:14px} input[type=checkbox]{transform:scale(1.1)}
+  .card{border:1px solid #ddd;border-radius:8px;padding:14px;margin:10px 0;background:#fafafa}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .kv{display:flex;gap:6px;margin:3px 0;font-size:14px}
+  .k{color:#666;min-width:110px;flex:0 0 auto}
+  .v{font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+  .answer{font-size:20px;font-weight:600;padding:6px 0}
+  .cite{display:inline-block;background:#eef;border-radius:4px;padding:1px 7px;margin:2px;font-family:monospace;font-size:13px}
+  .badge{display:inline-block;border-radius:4px;padding:1px 8px;font-size:13px;font-weight:600;margin:0 4px 0 0}
+  .ok{background:#e6f6e6;color:#1a7f1a}.warn{background:#fff3e0;color:#b26a00}.bad{background:#fdeaea;color:#c0392b}.na{background:#ececec;color:#666}
+  .ev{border-left:3px solid #999;padding:6px 10px;margin:8px 0;background:#fff;font-size:13px}
+  .ev .src{color:#888;font-size:12px}
+  .muted{color:#777;font-size:13px}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.compare{grid-template-columns:1fr}}
+  .col{border:1px solid #ddd;border-radius:8px;padding:12px}
+  .col h3{margin:0 0 6px;font-size:15px}
+  .col.baseline{background:#fff8f8}.col.fixed{background:#f5fff5}
+</style>
+
+<h1>系统失效诊断 · 离线样机</h1>
+<p class="muted">合成材料与固定响应离线重放，无模型 API 调用。主故障：<b>缓存键粒度不足</b>——同 query 换快照/文档仍命中旧缓存（R01→R02）。</p>
+
+<div class="bar">
+  <label>引擎
+    <select id="engine">
+      <option value="fixed" selected>修复版 fixed</option>
+      <option value="baseline">原样机 baseline</option>
+    </select>
+  </label>
+  <label>案例 <select id="cases"></select></label>
+  <label><input type="checkbox" id="reset"> 运行前清空缓存</label>
+  <button id="run">运行所选案例</button>
+  <button id="compare">并排对比修复前后</button>
+</div>
+<p class="muted">提示：R01→R02 请保持状态（不勾选清空）。<b>baseline</b> 引擎下 R02 会命中旧缓存返回 v1 的 30秒/b01；<b>fixed</b> 引擎下 R02 正确返回 12秒/b02。</p>
+
+<h2>单次运行结果</h2>
+<div id="result">等待执行</div>
+
+<h2>修复前后并排对比（同一案例，分别跑两个引擎）</h2>
+<div id="compareBox">选择案例后点「并排对比修复前后」。</div>
+
 <script>
-const el=document.getElementById('cases'),out=document.getElementById('out');
-fetch('/api/cases').then(r=>r.json()).then(d=>d.cases.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.id+' · '+c.request.doc_ids.join(',')+' / '+c.request.snapshot+' · '+c.request.query;el.append(o)})).catch(e=>out.textContent=String(e));
-document.getElementById('run').onclick=async()=>{try{const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({case_id:el.value,reset:document.getElementById('reset').checked})});out.textContent=JSON.stringify(await r.json(),null,2)}catch(e){out.textContent=String(e)}};
-</script></html>
+const $=id=>document.getElementById(id);
+const cases=$('cases'),result=$('result'),compareBox=$('compareBox');
+
+function badge(text, cls){const s=document.createElement('span');s.className='badge '+cls;s.textContent=text;return s;}
+
+function statusClass(st){return ({valid:'ok',supported:'ok',invalid:'bad',contradicted:'bad',insufficient:'warn',not_checked:'na'})[st]||'na';}
+
+function kv(label, value){const d=document.createElement('div');d.className='kv';
+  const k=document.createElement('span');k.className='k';k.textContent=label;
+  const v=document.createElement('span');v.className='v';v.textContent=(value===undefined||value===null||value==='')?'—':String(value);
+  d.append(k,v);return d;}
+
+function renderCard(o, engineName){
+  const card=document.createElement('div');card.className='card';
+  const title=document.createElement('div');
+  title.append(document.createTextNode('引擎 '),badge(engineName==='fixed'?'修复版':'原样机',engineName==='fixed'?'ok':'bad'));
+  title.append(document.createTextNode('  case '),badge(o.request.case_id||'','na'));
+  card.append(title);
+
+  // 当前请求
+  const req=o.request;
+  card.append(kv('query', req.query));
+  card.append(kv('doc_ids', JSON.stringify(req.doc_ids)));
+  card.append(kv('snapshot', req.snapshot));
+  card.append(kv('k', req.k));
+
+  // 答案 + 引用
+  const ans=document.createElement('div');ans.className='answer';
+  ans.append(document.createTextNode('answer: '),badge(o.answer,'ok'));
+  card.append(ans);
+  const cites=document.createElement('div');
+  cites.append(document.createTextNode('citations: '));
+  (o.citations||[]).forEach(c=>{const s=document.createElement('span');s.className='cite';s.textContent=c;cites.append(s);});
+  if(!(o.citations||[]).length) cites.append(document.createTextNode('（空）'));
+  card.append(cites);
+
+  // 状态
+  const st=document.createElement('div');st.style.margin='8px 0';
+  st.append(document.createTextNode('locator '),badge(o.locator_status,statusClass(o.locator_status)));
+  st.append(document.createTextNode('support '),badge(o.support_status,statusClass(o.support_status)));
+  st.append(document.createTextNode('judgment '),badge(o.judgment_source,'na'));
+  st.append(document.createTextNode('cache_hit '),badge(o.cache_hit?'true':'false',o.cache_hit?'warn':'na'));
+  st.append(document.createTextNode('elapsed '),badge(Number(o.elapsed_ms).toFixed(3)+'ms','na'));
+  st.append(document.createTextNode('run_kind '),badge(o.run_kind,'na'));
+  card.append(st);
+  if(o.support_status==='not_checked') card.append(kv('support 说明','未核验语义：本样机只查「引用可定位」，不查「答案是否被原文支撑」，如实标 not_checked。'));
+
+  // 实际证据
+  const evh=document.createElement('div');evh.style.margin='8px 0 4px';evh.textContent='实际证据（evidence）：'+(o.evidence&&o.evidence.length?o.evidence.length+' 条':'空');
+  card.append(evh);
+  (o.evidence||[]).forEach(e=>{
+    const d=document.createElement('div');d.className='ev';
+    const src=document.createElement('div');src.className='src';src.textContent=`${e.id} · doc_id=${e.doc_id} · snapshot=${e.snapshot} · page ${e.page}`;
+    const t=document.createElement('div');t.textContent=e.text;
+    d.append(src,t);card.append(d);
+  });
+  return card;
+}
+
+function run(engine, caseId, reset, target){
+  fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({engine:engine,case_id:caseId,reset:!!reset})})
+    .then(r=>r.json()).then(o=>{
+      const card=renderCard(o,engine);
+      const box=document.createElement('div');
+      if(o.request) o.request.case_id=caseId;
+      box.append(card);
+      if(target===result){result.innerHTML='';result.append(box);}
+    }).catch(e=>{target.textContent=String(e);});
+}
+
+fetch('/api/cases').then(r=>r.json()).then(d=>{
+  d.cases.forEach(c=>{const o=document.createElement('option');o.value=c.id;
+    o.textContent=c.id+' · '+c.request.doc_ids.join(',')+' / '+c.request.snapshot+' · '+c.request.query;cases.append(o);});
+}).catch(e=>result.textContent=String(e));
+
+$('run').onclick=()=>run($('engine').value, cases.value, $('reset').checked, result);
+
+$('compare').onclick=()=>{
+  const cid=cases.value;
+  compareBox.innerHTML='';
+  const note=document.createElement('p');note.className='muted';
+  note.textContent='对比 '+cid+'：原样机（左）vs 修复版（右）。R01→R02 依赖缓存状态，此处两个引擎各自独立实例、独立缓存。';
+  compareBox.append(note);
+  const grid=document.createElement('div');grid.className='compare';
+  const colB=document.createElement('div');colB.className='col baseline';colB.append(Object.assign(document.createElement('h3'),{textContent:'原样机 baseline'}));
+  const colF=document.createElement('div');colF.className='col fixed';colF.append(Object.assign(document.createElement('h3'),{textContent:'修复版 fixed'}));
+  grid.append(colB,colF);compareBox.append(grid);
+  // 两个引擎分别按「R01 然后当前案例」顺序执行，复现缓存依赖（R01 只在当前案例为 R02 时先跑）
+  const runWith = (engine, col) => {
+    const seq = cid==='R02' ? ['R01','R02'] : [cid];
+    const go = (i) => {
+      if(i>=seq.length){return;}
+      fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({engine:engine,case_id:seq[i],reset:(i===0)})})
+        .then(r=>r.json()).then(o=>{
+          if(seq[i]===cid){o.request.case_id=cid;col.append(renderCard(o,engine));}
+          go(i+1);
+        }).catch(e=>{col.append(document.createTextNode(String(e)));});
+    };
+    go(0);
+  };
+  runWith('baseline', colB);
+  runWith('fixed', colF);
+};
+</script>
+</html>
