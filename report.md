@@ -1,6 +1,6 @@
 # 基础与进阶整合报告：文档查证的证据组织与系统失效诊断
 
-报名编号：____　进阶选择：B（系统失效诊断）　模型：DeepSeek（配置 `deepseek-chat`，API 返回 `deepseek-flash`）
+姓名：赵博然　进阶选择：B（系统失效诊断）　模型：DeepSeek（配置 `deepseek-chat`，API 返回 `deepseek-flash`）
 
 > 基础复算：`python results/scoring/score.py`（判分）、`python results/checks/checks.py`（诊断+变体），逐题见 `results/results.csv`，原始记录见 `基础/runs/`。
 > 进阶 B 复算（离线，不花 API）：`进阶/challenge_b/` 下 `diagnose.py`（区分干预）、`verify_fixed.py`（修复+回归+变体）、`run_cases.py --engine fixed:Engine`。详细排障记录见 `进阶/challenge_b/README.md`。
