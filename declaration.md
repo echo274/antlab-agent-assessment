@@ -2,8 +2,8 @@
 
 > 提交前请候选人复核「本人核验」与「未实现/未验证」两处是否与实际情况一致。
 
-- **真实 API 模型名称**：DeepSeek（配置 `deepseek-chat`；API 响应 `model` 字段为 `deepseek-flash`）。
-- **Token 消耗量级**：< 10 万（实测 57 次付费调用，共 89,523 tokens：88,284 prompt + 1,239 completion）。
+- **真实 API 模型名称**：DeepSeek —— 主实验/开发调试用 `deepseek-chat`（API 响应 `model` 字段为 `deepseek-flash`）；诊断对照用 `deepseek-reasoner`（4 次）；另试 `deepseek-pro`（1 次，HTTP 400 失败，未计入结果）。
+- **Token 消耗量级**：约 10.3 万（103,488 tokens：`deepseek-chat` 59 次 93,389 + `deepseek-reasoner` 4 次 10,099；另有 `deepseek-pro` 1 次因 HTTP 400 失败、无 usage）。
 - **AI 工具与主要用途**：Claude Code（Claude）。用于：阅读任务说明与题包、实现 `student.py`（提示词设计与 improve 重排）、编写判分脚本（`score.py`）与检查脚本（`checks.py`）、撰写 `report.md`/`decisions.md`/README、进阶 B 源码审查与故障归因、编写修复（`fixed.py`）/区分干预（`diagnose.py`）/验证（`verify_fixed.py`）脚本、Git 操作与实验命令执行。
 - **本人核验并承担的关键判断及核验方法**：
   1. 判分 ground truth（T01–T08 的规则应用与算术）由本人逐题读 `cases.json` 原文确定，依据写在 `results/scoring/ground_truth.md`；

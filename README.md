@@ -3,15 +3,15 @@
 应用层开发者招募考核作品。**所选方向：基础（必做）+ 进阶 B（系统失效诊断）**。
 
 - **最终分支**：`main`
-- **最终 commit SHA**：`aa8940206991b8957df97b52896f9cf96abc2efa`（代码与报告内容定稿；本行标注为最后一次 commit）
-- **真实模型**：DeepSeek（配置 `deepseek-chat`，API 响应字段为 `deepseek-flash`）
+- **最终 commit SHA**：填收集表前执行 `git rev-parse HEAD` 获取（本次 README 与报告/声明/决策定稿于同一提交）
+- **真实模型**：DeepSeek（主实验 `deepseek-chat`，API 响应 `deepseek-flash`；诊断对照 `deepseek-reasoner`）
 
 ## 目录
 
 - `基础/` 基础题：12 题（4 开发 + 8 评测），证据核验方案实现见 `基础/starter/student.py`
 - `进阶/challenge_b/` 进阶 B：样机排障（`challenge.py` 基线、`fixed.py` 修复、`diagnose.py` 区分干预、`verify_fixed.py` 回归+变体、`README.md` 排障记录）
 - `results/` 逐例结果与判分（`results/results.csv`、`results/scoring/`、`results/checks/`）
-- `runs/`（见 `基础/runs/`、`进阶/challenge_b/runs/`）原始运行记录
+- `runs/` 原始运行记录：`基础/runs/`（67 个，分组清单见 `基础/runs/README.md`）、`进阶/challenge_b/runs/`
 - `report.md` / `decisions.md` / `declaration.md` 整合报告、决定、AI 声明
 
 ## 启动与运行
@@ -65,5 +65,8 @@ python server.py --port 8766                      # 页面（baseline + fixed �
 
 ## 来源与声明
 
-- 题包骨架复用 ANTLab Agent Tasks 基础题 starter（`基础/starter/`），`student.py` 为本人实现。
+- 题包骨架复用 ANTLab Agent Tasks 基础题 starter（`基础/starter/`）与进阶 B 样机（`进阶/challenge_b/`），源码基点见题包自带的 `基础/文件校验.json`、`进阶/文件校验.json`。
+- 本人改动过的题包文件（其余题包文件的 hash 与校验值一致）：
+  - `基础/starter/student.py` — 实现 `prepare_messages` + `improve`（必做答案本体）
+  - `进阶/challenge_b/index.html`、`进阶/challenge_b/server.py` — 进阶 B 双引擎（baseline+fixed）对比页
 - AI 使用声明见 `declaration.md`；密钥、Endpoint 未提交。
