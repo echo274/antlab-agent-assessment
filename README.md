@@ -3,7 +3,7 @@
 应用层开发者招募考核作品。**所选方向：基础（必做）+ 进阶 B（系统失效诊断）**。
 
 - **最终分支**：`main`
-- **最终 commit SHA**：填收集表前执行 `git rev-parse HEAD` 获取（本次 README 与报告/声明/决策定稿于同一提交）
+- **最终 commit SHA**：以 `git rev-parse HEAD` 为准
 - **真实模型**：DeepSeek（主实验 `deepseek-chat`，API 响应 `deepseek-flash`；诊断对照 `deepseek-reasoner`）
 
 ## 目录

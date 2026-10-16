@@ -1,7 +1,5 @@
 # AI、贡献与真实性声明
 
-> 提交前请候选人复核「本人核验」与「未实现/未验证」两处是否与实际情况一致。
-
 - **真实 API 模型名称**：DeepSeek —— 主实验/开发调试用 `deepseek-chat`（API 响应 `model` 字段为 `deepseek-flash`）；诊断对照用 `deepseek-reasoner`（4 次）；另试 `deepseek-pro`（1 次，HTTP 400 失败，未计入结果）。
 - **Token 消耗量级**：约 10.3 万（103,488 tokens：`deepseek-chat` 59 次 93,389 + `deepseek-reasoner` 4 次 10,099；另有 `deepseek-pro` 1 次因 HTTP 400 失败、无 usage）。
 - **AI 工具与主要用途**：Claude Code（Claude）。用于：阅读任务说明与题包、实现 `student.py`（提示词设计与 improve 重排）、编写判分脚本（`score.py`）与检查脚本（`checks.py`）、撰写 `report.md`/`decisions.md`/README、进阶 B 源码审查与故障归因、编写修复（`fixed.py`）/区分干预（`diagnose.py`）/验证（`verify_fixed.py`）脚本、Git 操作与实验命令执行。
@@ -11,7 +9,6 @@
   3. 核对了 40 次主实验无技术失败/格式错误/引用越界（`results.csv` 的 `cite_valid` 列）；
   4. 逐条读 `cases.json` 原文，核验 40 次主实验的「引用语义支撑」（cite_support：supported 26 / contradicted 13 / insufficient 1），规则与逐题依据见 `results/scoring/ground_truth.md`；
   5. 进阶 B：读 `challenge.py` 源码与 `spec.md`，确认缓存键只在 `query` 是 R02 返回旧版本的最早出错边界；单独跑 R02（`diagnose.py`）确认返回 12秒/b02，排除「过滤 bug」的竞争解释；跑 `verify_fixed.py` 确认 6/6 通过。
-  （以上由候选人确认后填写实际核验范围。）
 - **未实现、未运行或未验证的内容**：
   1. 进阶 B 只修主故障（缓存键粒度）；另两个症状 R03「先截断后过滤」、R04「support_status 把 ID 有效当语义支持」登记为风险、未修；
   2. 自构边界「资料更新后同请求仍命中旧缓存」已复现、未解决（缓存键不含资料版本 hash）；
